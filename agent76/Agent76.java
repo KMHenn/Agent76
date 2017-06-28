@@ -2,6 +2,7 @@ package agent76;
 
 import java.util.List;
 
+import negotiator.Agent;
 import negotiator.AgentID;
 import negotiator.Bid;
 import negotiator.Deadline;
@@ -11,7 +12,9 @@ import negotiator.actions.Offer;
 import negotiator.parties.AbstractNegotiationParty;
 import negotiator.parties.NegotiationInfo;
 import negotiator.persistent.PersistentDataContainer;
+import negotiator.timeline.Timeline;
 import negotiator.utility.AbstractUtilitySpace;
+import negotiator.utility.UtilitySpace;
 
 /**
  * 
@@ -19,96 +22,103 @@ import negotiator.utility.AbstractUtilitySpace;
  * @author Kaitlyn
  *
  */
-public class Agent76 extends AbstractNegotiationParty{
+public class Agent76 extends Agent{
 	
-	private Bid lastReceivedBid = null;
-	private Bid lastOfferedBid = null;
-	
-	@Override
-	public void init(NegotiationInfo info){
-		super.init(info);
-		
-		System.out.println("Discount Factor: " + info.getUtilitySpace().getDiscountFactor());
-		System.out.println("Reservation Value: " + info.getUtilitySpace().getReservationValueUndiscounted());
-		
-		//initialize any variables here.
-	}
+	private UtilitySpace utilitySpace;
+	private Timeline timeline;
+	private Action lastOpponentAction = null;
 	
 	/**
-	 * Called each round, asking you to accept or create an offer.
-	 * The first party of the first round is a bit different, since 
-	 * the agent must propose.
+	 * Return the action the agent chooses to make next.
 	 * 
-	 * @param validActions
-	 * @return chosen action
-	 * 
+	 * @return
 	 */
 	@Override
-	public Action chooseAction(List<Class<? extends Action>> validActions) {
-		// TODO 
-		if ((lastReceivedBid == null) || (!validActions.contains(Accept.class))){ //Agent76 must bid.
-			Bid newBid = createBid();
-			return new Offer(getPartyId(), newBid); //TODO need to generate an offer
+	public Action chooseAction() {
+		// TODO
+		Action newAction = null;
+		try{
+			if (lastOpponentAction == null) // First turn of first round, must bid.
+				//TODO make some kind of bid
+			if (lastOpponentAction instanceof Offer){ // Action must be decided based on circumstances.
+				Bid opponentBid = ((Offer) lastOpponentAction).getBid();
+				double offeredOpponentUtil = getUtility(opponentBid);
+				// get current time
+				double time = timeline.getTime();
+				//TODO make some kind of bid
+				
+				Bid newBid = ((Offer) newAction).getBid();
+				double myOfferedUtil = getUtility(newBid);
+				
+				//accept under certain circumstances
+				if (isAcceptable(offeredOpponentUtil, myOfferedUtil, time))
+					newAction = new Accept(getAgentID(), newBid);
+			}
+		} catch (Exception e){
+			e.printStackTrace();
+			newAction = new Accept(getAgentID(), null); //TODO probably shouldn't be null.
 		}
-		else{
-			//return new Accept(getPartyId(), lastReceivedBid);
-			boolean bidQuality = judgeOffer(lastReceivedBid);
-			if (bidQuality == true)
-				return new Accept(getPartyId(), lastReceivedBid);
-			else
-				return new Offer(getPartyId(), lastReceivedBid); //TODO not really using lastReceivedBid here.
-		}
+		return newAction;
 	}
 	
 	/**
-	 * Receive all offers from the other parties.
-	 * Used to predict the utility.
+	 * Inform the agent which action the opponent chose. 
 	 * 
-	 * @param sender
-	 * @param action
-	 * 
+	 * @param opponentAction
 	 */
 	@Override
-	public void receiveMessage(AgentID sender, Action action){
-		super.receiveMessage(sender, action);
-		if (action instanceof Offer){
-			lastReceivedBid = ((Offer) action).getBid();
-		}
+	public void ReceiveMessage(Action opponentAction){
+		lastOpponentAction = opponentAction;
+		//TODO
 	}
-
+	
 	/**
-	 * Determine whether or not to accept the offer made.
+	 * Informs the agent that a new negotiation session has begun.
+	 */
+	@Override
+	public void init(){
+		super.init();
+		//TODO
+	}
+	
+	/**
+	 * Convenience method, used to get the utility of a bid by
+	 * taking into account the discount factor.
 	 * 
 	 * @param bid
-	 * @return true for acceptable, false for rejected.
-	 *
+	 * @return the utility value of the bid.
 	 */
-	public boolean judgeOffer(Bid bid){
+	public double getUtility(Bid bid){
+		//TODO
+		return 0.00;
+	}
+	
+	/**
+	 * Check whether or not the offer is acceptable by Agent76's standards.
+	 * 
+	 * @param opponentOffer
+	 * @param myOffer
+	 * @param time
+	 * @return whether or not the offer is okay.
+	 */
+	public boolean isAcceptable(double opponentOffer, double myOffer, double time){
+		//TODO
+		double probableAcceptance = ((opponentOffer - (2*opponentOffer*time)
+				+ 2*(time - 1 + Math.sqrt((time - 1)*(time - 1) + opponentOffer*((2*time) - 1))))
+				/ ((2*time) - 1));
+		if (probableAcceptance >= 0.75)
+			return true;
+		
 		return false;
 	}
 	
 	/**
-	 * Create the new bid to be offered.
+	 * Return the name of the agent.
 	 * 
-	 * @return new bid
-	 * 
-	 */
-	public Bid createBid(){
-		//TODO
-		double lastReceiveUtil = getUtility(lastReceivedBid);
-		double lastOfferedUtil = getUtility(lastOfferedBid);
-		Math.abs(lastReceiveUtil - lastOfferedUtil);
-		return null;
-	}
-	
-	/**
-	 * Get the description of the agent.
-	 * 
-	 * @return description of the agent. 
-	 * 
+	 * @return
 	 */
 	@Override
-	public String getDescription() {
-		return "Party Agent76";
+	public String getName(){
+		return "Agent 76";
 	}
 }
