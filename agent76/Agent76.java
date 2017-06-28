@@ -22,6 +22,7 @@ import negotiator.utility.AbstractUtilitySpace;
 public class Agent76 extends AbstractNegotiationParty{
 	
 	private Bid lastReceivedBid = null;
+	private Bid lastOfferedBid = null;
 	
 	@Override
 	public void init(NegotiationInfo info){
@@ -45,7 +46,18 @@ public class Agent76 extends AbstractNegotiationParty{
 	@Override
 	public Action chooseAction(List<Class<? extends Action>> validActions) {
 		// TODO 
-		return null;
+		if ((lastReceivedBid == null) || (!validActions.contains(Accept.class))){ //Agent76 must bid.
+			Bid newBid = createBid();
+			return new Offer(getPartyId(), newBid); //TODO need to generate an offer
+		}
+		else{
+			//return new Accept(getPartyId(), lastReceivedBid);
+			boolean bidQuality = judgeOffer(lastReceivedBid);
+			if (bidQuality == true)
+				return new Accept(getPartyId(), lastReceivedBid);
+			else
+				return new Offer(getPartyId(), lastReceivedBid); //TODO not really using lastReceivedBid here.
+		}
 	}
 	
 	/**
@@ -54,6 +66,7 @@ public class Agent76 extends AbstractNegotiationParty{
 	 * 
 	 * @param sender
 	 * @param action
+	 * 
 	 */
 	@Override
 	public void receiveMessage(AgentID sender, Action action){
@@ -64,6 +77,31 @@ public class Agent76 extends AbstractNegotiationParty{
 	}
 
 	/**
+	 * Determine whether or not to accept the offer made.
+	 * 
+	 * @param bid
+	 * @return true for acceptable, false for rejected.
+	 *
+	 */
+	public boolean judgeOffer(Bid bid){
+		return false;
+	}
+	
+	/**
+	 * Create the new bid to be offered.
+	 * 
+	 * @return new bid
+	 * 
+	 */
+	public Bid createBid(){
+		//TODO
+		double lastReceiveUtil = getUtility(lastReceivedBid);
+		double lastOfferedUtil = getUtility(lastOfferedBid);
+		Math.abs(lastReceiveUtil - lastOfferedUtil);
+		return null;
+	}
+	
+	/**
 	 * Get the description of the agent.
 	 * 
 	 * @return description of the agent. 
@@ -73,5 +111,4 @@ public class Agent76 extends AbstractNegotiationParty{
 	public String getDescription() {
 		return "Party Agent76";
 	}
-
 }
