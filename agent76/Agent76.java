@@ -1,13 +1,22 @@
 package agent76;
 
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Random;
+
 import negotiator.Agent;
 import negotiator.Bid;
 import negotiator.actions.Accept;
 import negotiator.actions.Action;
+import negotiator.actions.EndNegotiation;
 import negotiator.actions.Offer;
-import negotiator.timeline.Timeline;
-import negotiator.utility.UtilitySpace;
+import negotiator.issue.Issue;
+import negotiator.issue.IssueDiscrete;
+import negotiator.issue.IssueInteger;
+import negotiator.issue.IssueReal;
+import negotiator.issue.Value;
+import negotiator.issue.ValueInteger;
+import negotiator.issue.ValueReal;
 
 /**
  * 
@@ -16,124 +25,143 @@ import negotiator.utility.UtilitySpace;
  *
  */
 public class Agent76 extends Agent{
+	private Action partnerAction = null;
+	private Bid lastPartnerBid;
+	private static double MIN_BID_UTILITY = 0.00;
 	
-	private UtilitySpace utilitySpace;
-	private Timeline timeline;
-	private Action lastOpponentAction = null;
-	private ArrayList <Offer> previousOpponentOffers;
-	private static double MINIMUM_UTILITY = 0.00;
-	
-	
-	/**
-	 * Informs the agent that a new negotiation session has begun.
-	 */
 	@Override
 	public void init(){
-		super.init();
-		//TODO
-		MINIMUM_UTILITY = utilitySpace.getReservationValue();
+		MIN_BID_UTILITY = utilitySpace.getReservationValueUndiscounted();
 	}
 	
-	/**
-	 * Return the action the agent chooses to make next.
-	 * 
-	 * @return
-	 */
 	@Override
-	public Action chooseAction() {
-		// TODO
-		Action newAction = null; //TODO always null as of now
+	public String getVersion(){
+		return "0.1";
+	}
+	
+	@Override
+	public String getName(){
+		return "Agent76";
+	}
+	
+	@Override
+	public void ReceiveMessage(Action opponentAction){
+		partnerAction = opponentAction;
+		
+		if (partnerAction instanceof Offer)
+			lastPartnerBid = ((Offer) partnerAction).getBid();
+	}
+	
+	@Override
+	public Action chooseAction(){
+		Action action = null;
+		
 		try{
-			if (lastOpponentAction == null) // First turn of first round, must bid.
-				//TODO make some kind of bid
-				return null;
+			if (partnerAction == null)
+				action = chooseRandomBidAction();
 			
-			if (lastOpponentAction instanceof Offer){ // Action must be decided based on circumstances.
-				previousOpponentOffers.add((Offer) lastOpponentAction);
-				Bid opponentBid = ((Offer) lastOpponentAction).getBid();
-				double offeredOpponentUtil = getUtility(opponentBid);
-				
-				// get current time
+			else if (partnerAction instanceof Offer){
+				double offeredOppUtil = getUtility(lastPartnerBid);
 				double time = timeline.getTime();
+				action = chooseRandomBidAction();
 				
-				//TODO make some kind of bid
+				Bid myBid = ((Offer) action).getBid();
+				double myOfferUtil = getUtility(myBid);
 				
-				Bid newBid = ((Offer) newAction).getBid();
-				double myOfferedUtil = getUtility(newBid);
-				
-				if (isAcceptable(offeredOpponentUtil, myOfferedUtil, time)) // Check if offer should be accepted.
-					newAction = new Accept(getAgentID(), newBid);
+				if (isAcceptable(offeredOppUtil, myOfferUtil, time))
+					action = new Accept (getAgentID(), lastPartnerBid);
 			}
 		}
 		catch (Exception e){
-			e.printStackTrace();
-			newAction = new Accept(getAgentID(), null); //TODO probably shouldn't be null.
+			System.out.println("Exception in chooseAction():" + e.getMessage());
+			if (lastPartnerBid != null)
+				action = new Accept(getAgentID(), lastPartnerBid);
+			else
+				action = new EndNegotiation(getAgentID());
 		}
-		return newAction;
+		return action;
 	}
-	
-	/**
-	 * Inform the agent which action the opponent chose. 
-	 * 
-	 * @param opponentAction
-	 */
-	@Override
-	public void ReceiveMessage(Action opponentAction){
-		lastOpponentAction = opponentAction;
-		//TODO
-	}
-	
-	/**
-	 * Convenience method, used to get the utility of a bid by
-	 * taking into account the discount factor.
-	 * 
-	 * @param bid
-	 * @return the utility value of the bid.
-	 */
-	public double getUtility(Bid bid){
-		//TODO
-		return 0.00;
-	}
-	
-	/**
-	 * Check whether or not the offer is acceptable by Agent76's standards.
-	 * 
-	 * @param opponentOffer
-	 * @param myOffer
-	 * @param time
-	 * @return whether or not the offer is okay.
-	 */
-	public boolean isAcceptable(double opponentOffer, double myOffer, double time){
-		//TODO
-		double paccept = ((opponentOffer - (2*opponentOffer*time)
-				+ 2*(time - 1 + Math.sqrt((time - 1)*(time - 1) + opponentOffer*((2*time) - 1))))
-				/ ((2*time) - 1));
-		if (paccept >= 0.75)
+
+	private boolean isAcceptable(double oppUtil, double myUtil, double time) throws Exception{
+		double paccept = Paccept(oppUtil, time);
+		if (paccept > Math.random())
 			return true;
-		
 		return false;
 	}
 	
-	/**
-	 * Calculate the average utility of the opponent's past bids.
-	 * 
-	 * @return average opponent utility.
-	 */
-	private double averageOpponentUtility(){
-		double numerator = 0;
-		for (int i = 0; i < previousOpponentOffers.size(); i ++)
-			numerator += getUtility(previousOpponentOffers.get(i).getBid()); 
-		
-		return (numerator / previousOpponentOffers.size());
+	private Action chooseRandomBidAction(){
+		Bid nextBid = null;
+		try{
+			nextBid = getRandomBid();
+		}
+		catch (Exception e){
+			System.out.println("Problem with received bid:" + e.getMessage() + ".\nCancelling bidding.");
+		}
+		if (nextBid == null)
+			return (new Accept(getAgentID(), lastPartnerBid));
+		return (new Offer(getAgentID(), nextBid));
 	}
 	
-	/**
-	 * Return the name of the agent.
-	 * 
-	 * @return name of the agent.
-	 */
-	@Override
-	public String getName(){
-		return "Agent 76";
+	private Bid getRandomBid() throws Exception{
+		HashMap<Integer, Value> vals = new HashMap<>();
+		List<Issue> issues = utilitySpace.getDomain().getIssues();
+		Random randomGen = new Random();
+		Bid bid = null;
+		
+		do{
+			for (Issue lIssue: issues){
+				switch (lIssue.getType()){
+				
+				case DISCRETE:
+					IssueDiscrete lIssueDiscrete = (IssueDiscrete) lIssue;
+					int opIndDisc = randomGen.nextInt(lIssueDiscrete.getNumberOfValues());
+					vals.put(lIssue.getNumber(), lIssueDiscrete.getValue(opIndDisc));
+					break;
+					
+				case REAL:
+					IssueReal lIssueReal = (IssueReal) lIssue;
+					int opIndReal = randomGen.nextInt(lIssueReal.getNumberOfDiscretizationSteps() - 1);
+					vals.put(lIssueReal.getNumber(),
+							new ValueReal (lIssueReal.getLowerBound()
+									+ (lIssueReal.getUpperBound() - lIssueReal.getLowerBound()) * (double)(opIndReal)
+									/ (double)(lIssueReal.getNumberOfDiscretizationSteps())));
+					break;
+				
+				case INTEGER:
+					IssueInteger lIssueInteger = (IssueInteger) lIssue;
+					int opIndInt = lIssueInteger.getLowerBound()
+								+ randomGen.nextInt(lIssueInteger.getUpperBound() - lIssueInteger.getLowerBound());
+					vals.put(lIssueInteger.getNumber(), new ValueInteger(opIndInt));
+					break;
+					
+				default:
+					throw new Exception("Issue type " + lIssue.getType() + " is not supported.");
+				}
+			}
+			bid = new Bid(utilitySpace.getDomain(), vals);
+		}while (getUtility(bid) < MIN_BID_UTILITY);
+		
+		return bid;
 	}
+	
+	double Paccept(double u, double t1) throws Exception {
+		double t = t1 * t1 * t1; // steeper increase when deadline approaches.
+		if (u < 0 || u > 1.05)
+			throw new Exception("utility " + u + " outside [0,1]");
+		// normalization may be slightly off, therefore we have a broad boundary
+		// up to 1.05
+		if (t < 0 || t > 1)
+			throw new Exception("time " + t + " outside [0,1]");
+		if (u > 1.)
+			u = 1;
+		if (t == 0.5)
+			return u;
+		return (u - 2. * u * t + 2. * (-1. + t + Math.sqrt(sq(-1. + t) + u * (-1. + 2 * t)))) / (-1. + 2 * t);
+	}
+
+	double sq(double x) {
+		return x * x;
+	}
+	
+	
 }
