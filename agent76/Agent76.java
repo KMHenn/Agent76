@@ -1,17 +1,22 @@
 package agent76;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
-import negotiator.AgentID;
+import negotiator.Agent;
 import negotiator.Bid;
-import negotiator.Deadline;
 import negotiator.actions.Accept;
 import negotiator.actions.Action;
+import negotiator.actions.EndNegotiation;
 import negotiator.actions.Offer;
-import negotiator.parties.AbstractNegotiationParty;
-import negotiator.parties.NegotiationInfo;
-import negotiator.persistent.PersistentDataContainer;
-import negotiator.utility.AbstractUtilitySpace;
+import negotiator.issue.Issue;
+import negotiator.issue.IssueDiscrete;
+import negotiator.issue.IssueInteger;
+import negotiator.issue.IssueReal;
+import negotiator.issue.Value;
+import negotiator.issue.ValueInteger;
+import negotiator.issue.ValueReal;
 
 /**
  * 
@@ -19,96 +24,41 @@ import negotiator.utility.AbstractUtilitySpace;
  * @author Kaitlyn
  *
  */
-public class Agent76 extends AbstractNegotiationParty{
-	
-	private Bid lastReceivedBid = null;
-	private Bid lastOfferedBid = null;
+public class Agent76 extends Agent{
+	private Action partnerAction = null;
+	private Bid lastPartnerBid;
+	private static double MIN_BID_UTILITY = 0.00;
 	
 	@Override
-	public void init(NegotiationInfo info){
-		super.init(info);
-		
-		System.out.println("Discount Factor: " + info.getUtilitySpace().getDiscountFactor());
-		System.out.println("Reservation Value: " + info.getUtilitySpace().getReservationValueUndiscounted());
-		
-		//initialize any variables here.
+	public void init(){
+		MIN_BID_UTILITY = utilitySpace.getReservationValueUndiscounted();
 	}
 	
-	/**
-	 * Called each round, asking you to accept or create an offer.
-	 * The first party of the first round is a bit different, since 
-	 * the agent must propose.
-	 * 
-	 * @param validActions
-	 * @return chosen action
-	 * 
-	 */
 	@Override
-	public Action chooseAction(List<Class<? extends Action>> validActions) {
-		// TODO 
-		if ((lastReceivedBid == null) || (!validActions.contains(Accept.class))){ //Agent76 must bid.
-			Bid newBid = createBid();
-			return new Offer(getPartyId(), newBid); //TODO need to generate an offer
-		}
-		else{
-			//return new Accept(getPartyId(), lastReceivedBid);
-			boolean bidQuality = judgeOffer(lastReceivedBid);
-			if (bidQuality == true)
-				return new Accept(getPartyId(), lastReceivedBid);
-			else
-				return new Offer(getPartyId(), lastReceivedBid); //TODO not really using lastReceivedBid here.
-		}
+	public String getVersion(){
+		return "0.1";
 	}
 	
-	/**
-	 * Receive all offers from the other parties.
-	 * Used to predict the utility.
-	 * 
-	 * @param sender
-	 * @param action
-	 * 
-	 */
 	@Override
-	public void receiveMessage(AgentID sender, Action action){
-		super.receiveMessage(sender, action);
-		if (action instanceof Offer){
-			lastReceivedBid = ((Offer) action).getBid();
-		}
+	public String getName(){
+		return "Agent76";
+	}
+	
+	@Override
+	public void ReceiveMessage(Action opponentAction){
+	}
+	
+	@Override
+	public Action chooseAction(){
 	}
 
-	/**
-	 * Determine whether or not to accept the offer made.
-	 * 
-	 * @param bid
-	 * @return true for acceptable, false for rejected.
-	 *
-	 */
-	public boolean judgeOffer(Bid bid){
-		return false;
+	private boolean isAcceptable(double oppUtil, double myUtil, double time) throws Exception{
 	}
 	
-	/**
-	 * Create the new bid to be offered.
-	 * 
-	 * @return new bid
-	 * 
-	 */
-	public Bid createBid(){
-		//TODO
-		double lastReceiveUtil = getUtility(lastReceivedBid);
-		double lastOfferedUtil = getUtility(lastOfferedBid);
-		Math.abs(lastReceiveUtil - lastOfferedUtil);
-		return null;
+	private Action chooseRandomBidAction(){
 	}
 	
-	/**
-	 * Get the description of the agent.
-	 * 
-	 * @return description of the agent. 
-	 * 
-	 */
-	@Override
-	public String getDescription() {
-		return "Party Agent76";
+	private Bid getRandomBid() throws Exception{
+		return bid;
 	}
 }
