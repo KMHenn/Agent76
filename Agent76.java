@@ -21,7 +21,6 @@ import negotiator.parties.NegotiationInfo;
  */
 public class Agent76 extends AbstractNegotiationParty{
 	private Bid lastPartnerBid;
-	private Bid lastUserBid;
 	static double MIN_BID_UTILITY;
 	private static double alpha = .30769;
 	OpponentTracker opponent;
@@ -36,7 +35,6 @@ public class Agent76 extends AbstractNegotiationParty{
 		super.init(info);
 		MIN_BID_UTILITY = utilitySpace.getReservationValueUndiscounted();
 		lastPartnerBid = null;
-		lastUserBid = null;
 		opponent = new OpponentTracker();
 	}
 	
@@ -116,8 +114,7 @@ public class Agent76 extends AbstractNegotiationParty{
 		super.receiveMessage(sender, action);
 		
 		if(action instanceof Offer){
-			lastPartnerBid = ((Offer) action).getBid();
-			OpponentTracker.offeredUtilities.add(utilitySpace.getUtility(lastPartnerBid));
+			lastPartnerBid = ((Offer) action).getBid(); //TODO problem here?
 		}
 	}
 	
