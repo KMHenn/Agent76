@@ -21,7 +21,6 @@ import negotiator.parties.NegotiationInfo;
  */
 public class Agent76 extends AbstractNegotiationParty{
 	private Bid lastPartnerBid;
-	private Bid lastUserBid;
 	static double MIN_BID_UTILITY;
 	private static double alpha = .30769;
 	OpponentTracker opponent;
@@ -36,7 +35,6 @@ public class Agent76 extends AbstractNegotiationParty{
 		super.init(info);
 		MIN_BID_UTILITY = utilitySpace.getReservationValueUndiscounted();
 		lastPartnerBid = null;
-		lastUserBid = null;
 		opponent = new OpponentTracker();
 	}
 	
@@ -48,19 +46,19 @@ public class Agent76 extends AbstractNegotiationParty{
 	@Override
 	public Action chooseAction(List<Class<? extends Action>> validActs) {
 		Action action = null;
-		double time = timeline.getTime();
+		double time = timeline.getTime(); //TODO problem seems to be here?
 		double threshold = getThreshold(time);
 		Bid maxBid = new Bid(utilitySpace.getDomain());
 		double utilityRange = 0.02;
 		
 		try{
 			if (lastPartnerBid == null)
-				action = new Offer(getPartyId(), maxBid);
+				return action = new Offer(getPartyId(), maxBid);
 		
 			else if (validActs.contains(Accept.class)){
 				double currentOppUtility = getUtilitySpace().getUtility(lastPartnerBid);
 			
-				if ((currentOppUtility >= (threshold - utilityRange)) && (currentOppUtility <= (threshold + utilityRange))) // The bid meets current minimum requirements.
+				if ((currentOppUtility <= (threshold - utilityRange)) && (currentOppUtility >= (threshold + utilityRange))) // The bid meets current minimum requirements.
 					action = new Accept(getPartyId(), lastPartnerBid);
 			
 				else if (threshold >= MIN_BID_UTILITY){ // Bids are still within what we've determined to be a valid range.
@@ -72,8 +70,8 @@ public class Agent76 extends AbstractNegotiationParty{
 				action = new EndNegotiation(getPartyId());
 		}
 		catch (Exception e){
-			System.out.println("Error encountered.\n" + e + "\nEnding negotiations");
-			action = new EndNegotiation(getPartyId());
+			System.out.println("Error encountered.\n" + e);
+			action = new Offer(getPartyId(), lastPartnerBid);
 		}
 		
 		return action;
@@ -129,9 +127,9 @@ public class Agent76 extends AbstractNegotiationParty{
 	 * @throws Exception 
 	 */
 	private Bid generateBid(double threshold) throws Exception{
-		Bid bid = utilitySpace.getMinUtilityBid();
-		
-		while(getUtility(bid) <= getUtility(lastPartnerBid))
+		Bid bid = utilitySpace.getMaxUtilityBid();
+
+		while(getUtility(bid) <= threshold)
 			bid = generateRandomBid();
 
 		return bid;
