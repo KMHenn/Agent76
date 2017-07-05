@@ -49,7 +49,7 @@ public class Agent76 extends AbstractNegotiationParty{
 		double time = timeline.getTime();
 		double threshold = getThreshold(time);
 		Bid maxBid = new Bid(utilitySpace.getDomain());
-		double utilityRange = 0.02;
+		double utilityRange = 0.05;
 		
 		try{
 			if (lastPartnerBid == null)
@@ -58,7 +58,9 @@ public class Agent76 extends AbstractNegotiationParty{
 			else if (validActs.contains(Accept.class)){
 				double currentOppUtility = getUtilitySpace().getUtility(lastPartnerBid);
 			
-				if ((currentOppUtility >= (threshold - utilityRange)) && (currentOppUtility <= (threshold + utilityRange))) // The bid meets current minimum requirements.
+				//if ((currentOppUtility >= (threshold - utilityRange)) && (currentOppUtility <= (threshold + utilityRange))) // The bid meets current minimum requirements.
+					
+				if ((currentOppUtility >= 0.5))
 					action = new Accept(getPartyId(), lastPartnerBid);
 			
 				else if (threshold >= MIN_BID_UTILITY){ // Bids are still within what we've determined to be a valid range.
@@ -126,11 +128,18 @@ public class Agent76 extends AbstractNegotiationParty{
 	 * @throws Exception 
 	 */
 	private Bid generateBid(double threshold) throws Exception{
+		//TODO want to prevent just handing the opponent the win with a bad bid.
 		Bid bid = utilitySpace.getMinUtilityBid();
+		double desiredUtility = getUtility(utilitySpace.getMaxUtilityBid());
 		
-		while(getUtility(bid) <= getUtility(lastPartnerBid))
+		while(getUtility(bid) <= desiredUtility){
 			bid = generateRandomBid();
+			desiredUtility -= 0.05;
+		}
 
+		System.out.println("-----\nMy Util: " + getUtility(bid));
+		desiredUtility = 1.0;
+		
 		return bid;
 	}
 	
