@@ -137,7 +137,7 @@ public class Agent76 extends AbstractNegotiationParty{
 			desiredUtility -= 0.05;
 		}
 
-		System.out.println("-----\nMy Util: " + getUtility(bid));
+		System.out.println("-----\nMy Util: " + getUtility(bid) + "\n-----");
 		desiredUtility = 1.0;
 		
 		return bid;
