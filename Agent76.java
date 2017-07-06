@@ -52,15 +52,17 @@ public class Agent76 extends AbstractNegotiationParty{
 			if ((validActs.size() == 2) && (validActs.contains(Offer.class))) // Check if an initial offer needs to be made.  Size 2 because initial valid options are Offer and EndNegotiations.
 				action = new Offer(getPartyId(), generateBid(threshold));
 		
-			else if (validActs.contains(Accept.class)){ // Decide how to behave based on previous bids.
-				double currentOppUtility = getUtilitySpace().getUtility(lastPartnerBid);
-			
-				if (isFair(currentOppUtility, (1 - currentOppUtility))) // Check if the bid is fair for Agent76.
+			else if (validActs.contains(Accept.class)){ // Decide how to behave based on previous bids.		
+				double currentUtility = getUtilitySpace().getUtility(lastPartnerBid);
+				
+				if (isFair(currentUtility, (1 - currentUtility))) // Check if the bid is fair for Agent76.
 					action = new Accept(getPartyId(), lastPartnerBid);
 			
 				else if (threshold >= MIN_BID_UTILITY){ // Bids are still within what we've determined to be a valid range.
 					action = new Offer(getPartyId(), generateBid(threshold));
 				}
+				
+				System.out.println("-----\nAgent76 Utility: " + currentUtility + "\nOpponent Utility: " + (1 - currentUtility) + "\n-----");
 			}
 				
 			else // No point in bidding further
@@ -70,7 +72,7 @@ public class Agent76 extends AbstractNegotiationParty{
 			System.out.println("Error encountered.\n" + e + "\nEnding negotiations");
 			action = new EndNegotiation(getPartyId());
 		}
-		
+	
 		return action;
 	}
 	
@@ -102,7 +104,6 @@ public class Agent76 extends AbstractNegotiationParty{
 		while(!isFair(getUtility(bid), (1 - getUtility(bid)))) // Check if this bid is fair for Agent76.
 			bid = generateRandomBid();
 
-		System.out.println("-----\nMy Util: " + getUtility(bid) + "\n-----"); // For debug.
 		return bid;
 	}
 	
