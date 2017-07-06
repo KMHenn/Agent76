@@ -16,7 +16,7 @@ import negotiator.parties.NegotiationInfo;
  * First attempt at an automated negotiation agent.
  * 
  * @author Kaitlyn
- * @version 7.5.2017
+ * @version 7.6.2017
  *
  */
 public class Agent76 extends AbstractNegotiationParty{
@@ -48,18 +48,14 @@ public class Agent76 extends AbstractNegotiationParty{
 		Action action = null;
 		double time = timeline.getTime();
 		double threshold = getThreshold(time);
-		Bid maxBid = new Bid(utilitySpace.getDomain());
-		double utilityRange = 0.05;
 		
 		try{
-			if (lastPartnerBid == null)
-				action = new Offer(getPartyId(), maxBid);
+			if ((validActs.size() == 2) && (validActs.contains(Offer.class)))
+				action = new Offer(getPartyId(), generateBid(threshold));
 		
 			else if (validActs.contains(Accept.class)){
 				double currentOppUtility = getUtilitySpace().getUtility(lastPartnerBid);
 			
-				//if ((currentOppUtility >= (threshold - utilityRange)) && (currentOppUtility <= (threshold + utilityRange))) // The bid meets current minimum requirements.
-					
 				if ((currentOppUtility >= 0.5))
 					action = new Accept(getPartyId(), lastPartnerBid);
 			
@@ -134,7 +130,7 @@ public class Agent76 extends AbstractNegotiationParty{
 		
 		while(getUtility(bid) <= desiredUtility){
 			bid = generateRandomBid();
-			desiredUtility -= 0.05;
+			desiredUtility -= 0.025;
 		}
 
 		System.out.println("-----\nMy Util: " + getUtility(bid) + "\n-----");
