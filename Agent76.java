@@ -23,6 +23,8 @@ public class Agent76 extends AbstractNegotiationParty{
 	private Bid lastPartnerBid;
 	static double MIN_BID_UTILITY;
 	private static double alpha = .30769;
+	private static double utilDec = .025;
+	
 	OpponentTracker opponent;
 	
 	/**
@@ -56,7 +58,7 @@ public class Agent76 extends AbstractNegotiationParty{
 			else if (validActs.contains(Accept.class)){
 				double currentOppUtility = getUtilitySpace().getUtility(lastPartnerBid);
 			
-				if ((currentOppUtility >= 0.5))
+				if (isFair(currentOppUtility, (1 - currentOppUtility)))
 					action = new Accept(getPartyId(), lastPartnerBid);
 			
 				else if (threshold >= MIN_BID_UTILITY){ // Bids are still within what we've determined to be a valid range.
@@ -81,25 +83,7 @@ public class Agent76 extends AbstractNegotiationParty{
 	 * 
 	 * @return true if fair, false otherwise.
 	 */
-/*	public boolean isFair(){
-		double sum = 0;
-		double squareSum = 0;
-		double fairnessMeasure;
-		int arraySize = OpponentTracker.offeredUtilities.size();
-		
-		for (int i = 0; i < arraySize; i++){
-			double util = OpponentTracker.offeredUtilities.get(i);
-			sum += util;
-			squareSum += Math.pow(util, 2);
-		}
-		
-		fairnessMeasure = (Math.pow(sum, 2) / (arraySize * squareSum));
-		
-		if (fairnessMeasure >= 0.5)
-			return true;
-		
-		return false;
-	}*/
+
 	
 	/**
 	 * Receive the opponent's action as a message.
@@ -128,13 +112,13 @@ public class Agent76 extends AbstractNegotiationParty{
 		Bid bid = utilitySpace.getMinUtilityBid();
 		double desiredUtility = getUtility(utilitySpace.getMaxUtilityBid());
 		
-		while(getUtility(bid) <= desiredUtility){
+		while(!isFair(getUtility(bid), (1 - getUtility(bid)))){
 			bid = generateRandomBid();
-			desiredUtility -= 0.025;
+			desiredUtility -= utilDec;
 		}
 
+		utilDec += .025;
 		System.out.println("-----\nMy Util: " + getUtility(bid) + "\n-----");
-		desiredUtility = 1.0;
 		
 		return bid;
 	}
@@ -148,6 +132,22 @@ public class Agent76 extends AbstractNegotiationParty{
 	 */
 	public double getThreshold(double time){
 		return (1.0 - Math.pow(time,  (1/alpha)));
+	}
+	
+	/**
+	 * Check whether or not the offer is fair for me.
+	 * 
+	 * @param myUtil
+	 * @param oppUtil
+	 * @return true if fair, false otherwise
+	 */
+	public boolean isFair(double myUtil, double oppUtil){
+		double comparison = myUtil / oppUtil;
+		
+		if (comparison >= 1)
+			return true;
+		
+		return false;
 	}
 	
 

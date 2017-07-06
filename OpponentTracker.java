@@ -7,6 +7,14 @@ import negotiator.Bid;
 import negotiator.actions.Action;
 import negotiator.parties.AbstractNegotiationParty;
 
+/**
+ * 
+ * Track the opponent's bid
+ * 
+ * @author Kaitlyn
+ * @version 7.6.2017
+ *
+ */
 public class OpponentTracker extends AbstractNegotiationParty{
 	private Bid mostRecentBid;
 	private double mostRecentUtility;
@@ -19,13 +27,13 @@ public class OpponentTracker extends AbstractNegotiationParty{
 	 */
 	protected void updateMostRecentBid (Bid bid){
 		mostRecentBid = bid;
-		updateMostRecentUtility();
+		updateMostRecentUtility(mostRecentBid);
 	}
 	
 	/**
 	 * Update the most recent utility, using the most recent bid.
 	 */
-	protected void updateMostRecentUtility(){
+	protected void updateMostRecentUtility(Bid mostRecentBid){
 		mostRecentUtility = getUtilitySpace().getUtility(mostRecentBid);
 		offeredUtilities.add(mostRecentUtility);
 	}
@@ -61,6 +69,7 @@ public class OpponentTracker extends AbstractNegotiationParty{
 			totalUtility += offeredUtilities.get(i);
 		
 		averageUtility = totalUtility / offeredUtilities.size();
+		System.out.println("------\nAverag Opponent Utility: " + averageUtility + "\n-----");
 		return averageUtility;
 	}
 
